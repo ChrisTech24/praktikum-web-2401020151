@@ -22,7 +22,7 @@ Route::get('/mahasiswa', function (Request $request) {
 
         if ($katakunci !== '') {
             $sql .= ' AND (m.nim LIKE :kata_kunci_nim OR m.nama LIKE :kata_kunci_nama OR m.email LIKE :kata_kunci_email)';
-            $nilaiPencarian = '%' . $katakunci . '%';
+            $nilaiPencarian = '%'.$katakunci.'%';
             $parameter['kata_kunci_nim'] = $nilaiPencarian;
             $parameter['kata_kunci_nama'] = $nilaiPencarian;
             $parameter['kata_kunci_email'] = $nilaiPencarian;
@@ -37,15 +37,16 @@ Route::get('/mahasiswa', function (Request $request) {
 
         $ambilMahasiswa = $pdo->prepare($sql);
         $ambilMahasiswa->execute($parameter);
-        $daftarMahasiswa = $ambilMahasiswa->fetchAll(\PDO::FETCH_ASSOC);
+        $daftarMahasiswa = $ambilMahasiswa->fetchAll(PDO::FETCH_ASSOC);
 
         $ambilProdi = $pdo->prepare('SELECT id, nama_prodi FROM program_studi ORDER BY nama_prodi');
         $ambilProdi->execute();
-        $daftarProgramStudi = $ambilProdi->fetchAll(\PDO::FETCH_ASSOC);
+        $daftarProgramStudi = $ambilProdi->fetchAll(PDO::FETCH_ASSOC);
 
         return view('mahasiswa', compact('daftarMahasiswa', 'daftarProgramStudi', 'katakunci', 'programStudiId'));
-    } catch (\Throwable $error) {
+    } catch (Throwable $error) {
         report($error);
+
         return response('Data tidak dapat dibaca. Periksa koneksi dan query.', 500);
     }
 })->name('mahasiswa.index');
@@ -60,12 +61,18 @@ Route::post('/mahasiswa', function (Request $request) {
         'program_studi_id' => ['required', 'integer'],
     ], [
         'nim.required' => 'NIM wajib diisi.',
+        'nim.max' => 'NIM maksimal 20 karakter.',
         'nama.required' => 'Nama wajib diisi.',
+        'nama.max' => 'Nama maksimal 100 karakter.',
         'email.required' => 'Email wajib diisi.',
         'email.email' => 'Format email tidak valid.',
+        'email.max' => 'Email maksimal 100 karakter.',
         'usia.required' => 'Usia wajib diisi.',
         'usia.integer' => 'Usia harus berupa angka.',
+        'usia.min' => 'Usia minimal 15 tahun.',
+        'usia.max' => 'Usia maksimal 100 tahun.',
         'program_studi_id.required' => 'Program studi wajib dipilih.',
+        'program_studi_id.integer' => 'Program studi tidak valid.',
     ]);
 
     try {
@@ -82,8 +89,9 @@ Route::post('/mahasiswa', function (Request $request) {
         $simpan->execute($data);
 
         return redirect()->route('mahasiswa.index')->with('berhasil', 'Data mahasiswa berhasil ditambahkan.');
-    } catch (\Throwable $error) {
+    } catch (Throwable $error) {
         report($error);
+
         return back()->withInput()->with('gagal', 'Data gagal disimpan. Periksa koneksi dan data.');
     }
 })->name('mahasiswa.store');
@@ -95,19 +103,20 @@ Route::get('/mahasiswa/{id}/edit', function (int $id) {
 
         $ambilMahasiswa = $pdo->prepare('SELECT id, nim, nama, email, usia, program_studi_id FROM mahasiswa WHERE id = :id');
         $ambilMahasiswa->execute(['id' => $id]);
-        $mahasiswa = $ambilMahasiswa->fetch(\PDO::FETCH_ASSOC);
+        $mahasiswa = $ambilMahasiswa->fetch(PDO::FETCH_ASSOC);
 
-        if (!$mahasiswa) {
+        if (! $mahasiswa) {
             return redirect()->route('mahasiswa.index')->with('gagal', 'Data mahasiswa tidak ditemukan.');
         }
 
         $ambilProdi = $pdo->prepare('SELECT id, nama_prodi FROM program_studi ORDER BY nama_prodi');
         $ambilProdi->execute();
-        $daftarProgramStudi = $ambilProdi->fetchAll(\PDO::FETCH_ASSOC);
+        $daftarProgramStudi = $ambilProdi->fetchAll(PDO::FETCH_ASSOC);
 
         return view('mahasiswa-edit', compact('mahasiswa', 'daftarProgramStudi'));
-    } catch (\Throwable $error) {
+    } catch (Throwable $error) {
         report($error);
+
         return redirect()->route('mahasiswa.index')->with('gagal', 'Data gagal dibuka untuk diubah.');
     }
 })->name('mahasiswa.edit');
@@ -120,6 +129,20 @@ Route::put('/mahasiswa/{id}', function (Request $request, int $id) {
         'email' => ['required', 'email', 'max:100'],
         'usia' => ['required', 'integer', 'min:15', 'max:100'],
         'program_studi_id' => ['required', 'integer'],
+    ], [
+        'nim.required' => 'NIM wajib diisi.',
+        'nim.max' => 'NIM maksimal 20 karakter.',
+        'nama.required' => 'Nama wajib diisi.',
+        'nama.max' => 'Nama maksimal 100 karakter.',
+        'email.required' => 'Email wajib diisi.',
+        'email.email' => 'Format email tidak valid.',
+        'email.max' => 'Email maksimal 100 karakter.',
+        'usia.required' => 'Usia wajib diisi.',
+        'usia.integer' => 'Usia harus berupa angka.',
+        'usia.min' => 'Usia minimal 15 tahun.',
+        'usia.max' => 'Usia maksimal 100 tahun.',
+        'program_studi_id.required' => 'Program studi wajib dipilih.',
+        'program_studi_id.integer' => 'Program studi tidak valid.',
     ]);
 
     try {
@@ -143,8 +166,9 @@ Route::put('/mahasiswa/{id}', function (Request $request, int $id) {
         ]);
 
         return redirect()->route('mahasiswa.index')->with('berhasil', 'Data mahasiswa berhasil diperbarui.');
-    } catch (\Throwable $error) {
+    } catch (Throwable $error) {
         report($error);
+
         return back()->withInput()->with('gagal', 'Data gagal diperbarui. Periksa koneksi dan data.');
     }
 })->name('mahasiswa.update');
@@ -162,8 +186,9 @@ Route::delete('/mahasiswa/{id}', function (int $id) {
         }
 
         return redirect()->route('mahasiswa.index')->with('berhasil', 'Data mahasiswa berhasil dihapus.');
-    } catch (\Throwable $error) {
+    } catch (Throwable $error) {
         report($error);
+
         return redirect()->route('mahasiswa.index')->with('gagal', 'Data gagal dihapus. Periksa relasi atau koneksi.');
     }
 })->name('mahasiswa.destroy');
