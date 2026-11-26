@@ -6,34 +6,34 @@
 </head>
 <body>
     <h1>Daftar Buku</h1>
-    <p>Praktikum Pemrograman Web</p>
+    <p><a href="{{ route('buku.create') }}">Tambah Buku</a></p>
 
-    <form method="GET" action="{{ url('/buku') }}">
-        <p>Cari judul <input name="cari" value="{{ $cari }}"></p>
-        <p><button type="submit">Cari</button></p>
-    </form>
-
-    <table border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>Kode</th>
-                <th>Judul</th>
-                <th>Detail</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($buku as $item)
-                <tr>
-                    <td>{{ $item['kode'] }}</td>
-                    <td>{{ $item['judul'] }}</td>
-                    <td><a href="{{ url('/buku/'.$item['kode']) }}">Lihat</a></td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    @if (count($buku) === 0)
-        <p>Data buku tidak ditemukan.</p>
+    @if (session('status'))
+        <p>{{ session('status') }}</p>
     @endif
+
+    <table border="1">
+        <tr>
+            <th>Kode</th>
+            <th>Judul</th>
+            <th>Kategori</th>
+            <th>Aksi</th>
+        </tr>
+        @foreach ($bukus as $buku)
+            <tr>
+                <td>{{ $buku->kode }}</td>
+                <td>{{ $buku->judul }}</td>
+                <td>{{ $buku->kategori->nama }}</td>
+                <td>
+                    <a href="{{ route('buku.edit', $buku) }}">Ubah</a>
+                    <form action="{{ route('buku.destroy', $buku) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit">Hapus</button>
+                    </form>
+                </td>
+            </tr>
+        @endforeach
+    </table>
 </body>
 </html>
