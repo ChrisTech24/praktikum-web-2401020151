@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BukuController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -8,8 +9,13 @@ use Illuminate\Support\Facades\Route;
 // Redirect utama
 Route::redirect('/', '/mahasiswa');
 
-// Modul 10 - CRUD Buku dengan Eloquent
-Route::resource('buku', BukuController::class)->except('show');
+Route::get('/login', [LoginController::class, 'create'])->name('login');
+Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+Route::middleware('auth')->group(function (): void {
+    Route::resource('buku', BukuController::class)->except('show');
+});
 
 // 1. READ + PENCARIAN + FILTER
 Route::get('/mahasiswa', function (Request $request) {
